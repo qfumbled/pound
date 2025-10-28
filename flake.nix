@@ -13,31 +13,14 @@
           inherit system;
           config.allowUnfree = false;
         };
-        commonLibs = with pkgs; [
-          libclipboard
-          xorg.libX11
-          xorg.libxcb
-        ];
+        poundPkg = pkgs.callPackage ./pkgs/pound { src = self; };
+        toolchain = with pkgs; [ gcc gnumake pkg-config ];
       in {
-        packages.default = pkgs.stdenv.mkDerivation {
-          pname = "pound";
-          version = "0.1.0";
-          src = self;
-          nativeBuildInputs = with pkgs; [ gcc gnumake pkg-config ];
-          buildInputs = commonLibs;
-          buildPhase = ''
-            make
-          '';
-          installPhase = ''
-            mkdir -p $out/bin
-            cp build/pound $out/bin/pound
-          '';
-          doCheck = false;
-        };
+        packages.default = poundPkg;
 
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [ gcc gnumake pkg-config ];
-          buildInputs = commonLibs ++ [ pkgs.stdenv.cc.cc.lib ];
+          packages = toolchain;
+          buildInputs = toolchain ++ poundPkg.buildInputs or [];
         };
       });
 }
